@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VIPs - ADM ANGLS RP</title>
+  <link rel="stylesheet" href="/css/vip.css" />
+</head>
+<body>
+  <h3> <p>
+    <button onclick="window.location.href='/loja'">Início</button>
+  </p></h3>
+
+  <header>
+    <h1>💎 Planos VIP - ADM ANGLS RP</h1>
+  </header>
+
+  <main class="vip-container" id="vip-container">
+    <p>Carregando planos VIP...</p>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('vip-container');
+      
+      container.innerHTML = '<p>Carregando planos VIP...</p>';
+
+      fetch('/api/vip/produtos')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Erro na requisição. Status: ' + response.status);
+          }
+          return response.json();
+        })
+        .then(produtos => {
+          container.innerHTML = '';
+          
+          const vips = produtos.filter(p => p.categoria && p.categoria.toLowerCase() === 'vip');
+
+          if (vips.length === 0) {
+            container.innerHTML = '<p>Nenhum plano VIP encontrado.</p>';
+            return;
+          }
+
+          vips.forEach(prod => {
+            const card = document.createElement('div');
+            card.classList.add('vip-card');
+            
+            const precoNumerico = parseFloat(prod.preco);
+            
+            if (precoNumerico > 40) card.classList.add('destaque');
+
+            card.innerHTML = `
+              <h2>${prod.nome}</h2>
+              <p>${prod.descricao}</p>
+              <p class="preco">R$ ${precoNumerico.toFixed(2)}</p>
+              <button onclick="alert('Comprar ${prod.nome}')">Comprar</button>
+            `;
+            container.appendChild(card);
+          });
+        })
+        .catch(error => {
+          console.error('Erro ao carregar os planos VIP:', error);
+          container.innerHTML = '<p>Erro ao carregar os planos VIP.</p>';
+        });
+    });
+  </script>
+</body>
+</html>

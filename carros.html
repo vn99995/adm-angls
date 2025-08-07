@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carros VIP</title>
+</head>
+<body>
+
+    <div class="content-container">
+        <h1>Carros VIP</h1>
+        <div class="card-container" id="carros-container">
+            </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/carros/produtos')
+                .then(response => response.json())
+                .then(carros => {
+                    const container = document.getElementById('carros-container');
+                    if (carros && carros.length > 0) {
+                        carros.forEach(carro => {
+                            const card = document.createElement('div');
+                            card.className = 'card';
+                            card.innerHTML = `
+                                <h2>${carro.nome_carro}</h2>
+                                <img src="${carro.imagem}" alt="${carro.nome_carro}" />
+                                <p>Preço: $${carro.preco}</p>
+                                <button class="btn-comprar" data-carro-id="${carro.id}">Comprar</button>
+                            `;
+                            container.appendChild(card);
+                        });
+
+                        document.querySelectorAll('.btn-comprar').forEach(button => {
+                            button.addEventListener('click', (event) => {
+                                const carroId = event.target.dataset.carroId;
+                                comprarCarro(carroId);
+                            });
+                        });
+                    } else {
+                        container.innerHTML = '<p>Nenhum carro VIP disponível.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar os carros VIP:', error);
+                    document.getElementById('carros-container').innerHTML = '<p>Erro ao carregar os carros VIP.</p>';
+                });
+        });
+
+        function comprarCarro(carroId) {
+            fetch('/api/carros/comprar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ carro_id: carroId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erro ao criar o pagamento.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.paymentLink) {
+                    window.location.href = data.paymentLink;
+                } else {
+                    console.error('Erro: link de pagamento não recebido.');
+                }
+            })
+            .catch(error => {
+                alert(error.message);
+                console.error('Erro:', error);
+            });
+        }
+    </script>
+</body>
+</html>
